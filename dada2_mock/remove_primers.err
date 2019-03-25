@@ -1,0 +1,15 @@
+TrimmomaticPE: Started with arguments:
+ 0_data_raw/run1//Undetermined_S0_L001_R1_001.fastq.gz 0_data_raw/run1//Undetermined_S0_L001_R2_001.fastq.gz 1_remove_primers/run1/R1.paired.fastq.gz 1_remove_primers/run1/R1.unpaired.fastq.gz 1_remove_primers/run1/R2.paired.fastq.gz 1_remove_primers/run1/R2.unpaired.fastq.gz ILLUMINACLIP:techseqs.fa:2:30:10
+java.io.FileNotFoundException: /gpfs/fs1/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/techseqs.fa (No such file or directory)
+	at java.io.FileInputStream.open(Native Method)
+	at java.io.FileInputStream.<init>(FileInputStream.java:146)
+	at org.usadellab.trimmomatic.fasta.FastaParser.parse(FastaParser.java:54)
+	at org.usadellab.trimmomatic.trim.IlluminaClippingTrimmer.loadSequences(IlluminaClippingTrimmer.java:110)
+	at org.usadellab.trimmomatic.trim.IlluminaClippingTrimmer.makeIlluminaClippingTrimmer(IlluminaClippingTrimmer.java:71)
+	at org.usadellab.trimmomatic.trim.TrimmerFactory.makeTrimmer(TrimmerFactory.java:32)
+	at org.usadellab.trimmomatic.Trimmomatic.createTrimmers(Trimmomatic.java:59)
+	at org.usadellab.trimmomatic.TrimmomaticPE.run(TrimmomaticPE.java:536)
+	at org.usadellab.trimmomatic.Trimmomatic.main(Trimmomatic.java:80)
+Quality encoding detected as phred33
+Input Read Pairs: 9259176 Both Surviving: 9259176 (100.00%) Forward Only Surviving: 0 (0.00%) Reverse Only Surviving: 0 (0.00%) Dropped: 0 (0.00%)
+TrimmomaticPE: Completed successfully

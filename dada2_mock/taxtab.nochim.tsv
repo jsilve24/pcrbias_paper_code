@@ -1,0 +1,19 @@
+Kingdom	Phylum	Class	Order	Family	Genus	Species
+seq_1	Bacteria	Bacteroidetes	Bacteroidia	Bacteroidales	Bacteroidaceae	Bacteroides	NA
+seq_2	Bacteria	Firmicutes	Bacilli	Lactobacillales	Streptococcaceae	Streptococcus	NA
+seq_3	Bacteria	Proteobacteria	Gammaproteobacteria	Enterobacteriales	Enterobacteriaceae	NA	NA
+seq_4	Bacteria	Firmicutes	Clostridia	Clostridiales	Lachnospiraceae	Dorea	formicigenerans
+seq_5	Bacteria	Firmicutes	Bacilli	Lactobacillales	Enterococcaceae	Enterococcus	NA
+seq_6	Bacteria	Proteobacteria	Gammaproteobacteria	Enterobacteriales	Enterobacteriaceae	Escherichia/Shigella	NA
+seq_7	Bacteria	Proteobacteria	Gammaproteobacteria	Enterobacteriales	Enterobacteriaceae	Raoultella	NA
+seq_8	Bacteria	Firmicutes	Erysipelotrichia	Erysipelotrichales	Erysipelotrichaceae	Incertae_Sedis	NA
+seq_9	Bacteria	Firmicutes	Negativicutes	Selenomonadales	Veillonellaceae	Veillonella	NA
+seq_10	Bacteria	Firmicutes	Negativicutes	Selenomonadales	Veillonellaceae	Veillonella	NA
+seq_11	Bacteria	Firmicutes	Clostridia	Clostridiales	Ruminococcaceae	Flavonifractor	plautii
+seq_12	Bacteria	Firmicutes	Clostridia	Clostridiales	Lachnospiraceae	Dorea	NA
+seq_13	Bacteria	Firmicutes	Clostridia	Clostridiales	Lachnospiraceae	Hungatella	NA
+seq_14	Bacteria	Proteobacteria	Gammaproteobacteria	Enterobacteriales	Enterobacteriaceae	NA	NA
+seq_15	Bacteria	Bacteroidetes	Bacteroidia	Bacteroidales	Bacteroidaceae	Bacteroides	uniformis
+seq_16	Bacteria	Firmicutes	Clostridia	Clostridiales	Family_XI	Anaerosalibacter	bizertensis
+seq_17	Bacteria	Firmicutes	Clostridia	Clostridiales	Family_XI	Peptoniphilus	NA
+seq_18	Bacteria	Synergistetes	Synergistia	Synergistales	Synergistaceae	Pyramidobacter	piscolens

@@ -1,0 +1,713 @@
+
+R version 3.4.0 (2017-04-21) -- "You Stupid Darkness"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> # Applying dada2 pipeline to bioreactor time-series
+> ## Following tutorial http://benjjneb.github.io/dada2/tutorial.html
+> ## and here http://benjjneb.github.io/dada2/bigdata.html
+> 
+> setwd('/data/davidlab/users/jds/pcrbias/results/dada2/')
+> 
+> library(dada2); packageVersion("dada2")
+Loading required package: Rcpp
+[1] ‘1.4.0’
+> library(ShortRead); packageVersion("ShortRead")
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colMeans, colnames,
+    colSums, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
+    grepl, intersect, is.unsorted, lapply, lengths, Map, mapply, match,
+    mget, order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+    rbind, Reduce, rowMeans, rownames, rowSums, sapply, setdiff, sort,
+    table, tapply, union, unique, unsplit, which, which.max, which.min
+
+Loading required package: BiocParallel
+Loading required package: Biostrings
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:base’:
+
+    expand.grid
+
+Loading required package: IRanges
+Loading required package: XVector
+
+Attaching package: ‘Biostrings’
+
+The following object is masked from ‘package:base’:
+
+    strsplit
+
+Loading required package: Rsamtools
+Loading required package: GenomeInfoDb
+Loading required package: GenomicRanges
+Loading required package: GenomicAlignments
+Loading required package: SummarizedExperiment
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Loading required package: DelayedArray
+Loading required package: matrixStats
+
+Attaching package: ‘matrixStats’
+
+The following objects are masked from ‘package:Biobase’:
+
+    anyMissing, rowMedians
+
+
+Attaching package: ‘DelayedArray’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
+
+The following object is masked from ‘package:Biostrings’:
+
+    type
+
+The following object is masked from ‘package:base’:
+
+    apply
+
+[1] ‘1.34.0’
+> library(ggplot2); packageVersion("ggplot2")
+[1] ‘2.2.1’
+> 
+> path <- "/data/davidlab/users/jds/pcrbias/results/dada2/"
+> 
+> # Filtering and Trimming --------------------------------------------------
+> 
+> # Forward and Reverse Filenames
+> fnFs.s1 <-list.files(paste(path, "3_demultiplex/s1r1_split_samples/", sep=""))
+> fnRs.s1 <-list.files(paste(path, "3_demultiplex/s1r2_split_samples/", sep=""))
+> 
+> # Sort to ensure filenames are in the same order
+> fnFs.s1 <- sort(fnFs.s1)
+> fnRs.s1 <- sort(fnRs.s1)
+> 
+> sample.names.1 <- sapply(strsplit(fnFs.s1,".fastq", fixed=TRUE), `[`, 1)
+> 
+> # Remove extraneous samples ## EDIT THIS AS NEEDED
+> to.keep <- grepl("^V", sample.names.1)
+> sample.names.1 <- sample.names.1[to.keep]
+> print(sample.names.1)
+  [1] "V1.1.20" "V1.1.21" "V1.1.22" "V1.1.23" "V1.1.24" "V1.1.25" "V1.1.26"
+  [8] "V1.1.27" "V1.1.28" "V1.1.29" "V1.1.30" "V1.1.31" "V1.1.32" "V1.1.33"
+ [15] "V1.1.34" "V1.1.35" "V1.2.20" "V1.2.21" "V1.2.22" "V1.2.23" "V1.2.24"
+ [22] "V1.2.25" "V1.2.26" "V1.2.27" "V1.2.28" "V1.2.29" "V1.2.30" "V1.2.31"
+ [29] "V1.2.32" "V1.2.33" "V1.2.34" "V1.2.35" "V1.3.20" "V1.3.21" "V1.3.22"
+ [36] "V1.3.23" "V1.3.24" "V1.3.25" "V1.3.26" "V1.3.27" "V1.3.28" "V1.3.29"
+ [43] "V1.3.30" "V1.3.31" "V1.3.32" "V1.3.33" "V1.3.34" "V1.3.35" "V2.1.20"
+ [50] "V2.1.21" "V2.1.22" "V2.1.23" "V2.1.24" "V2.1.25" "V2.1.26" "V2.1.27"
+ [57] "V2.1.28" "V2.1.29" "V2.1.30" "V2.1.31" "V2.1.32" "V2.1.33" "V2.1.34"
+ [64] "V2.1.35" "V2.2.20" "V2.2.21" "V2.2.22" "V2.2.23" "V2.2.24" "V2.2.25"
+ [71] "V2.2.26" "V2.2.27" "V2.2.28" "V2.2.29" "V2.2.30" "V2.2.31" "V2.2.32"
+ [78] "V2.2.33" "V2.2.34" "V2.2.35" "V2.3.20" "V2.3.21" "V2.3.22" "V2.3.23"
+ [85] "V2.3.24" "V2.3.25" "V2.3.26" "V2.3.27" "V2.3.28" "V2.3.29" "V2.3.30"
+ [92] "V2.3.31" "V2.3.32" "V2.3.33" "V2.3.34" "V2.3.35" "V3.1.20" "V3.1.21"
+ [99] "V3.1.22" "V3.1.23" "V3.1.24" "V3.1.25" "V3.1.26" "V3.1.27" "V3.1.28"
+[106] "V3.1.29" "V3.1.30" "V3.1.31" "V3.1.32" "V3.1.33" "V3.1.34" "V3.1.35"
+[113] "V3.2.20" "V3.2.21" "V3.2.22" "V3.2.23" "V3.2.24" "V3.2.25" "V3.2.26"
+[120] "V3.2.27" "V3.2.28" "V3.2.29" "V3.2.30" "V3.2.31" "V3.2.32" "V3.2.33"
+[127] "V3.2.34" "V3.2.35" "V3.3.20" "V3.3.21" "V3.3.22" "V3.3.23" "V3.3.24"
+[134] "V3.3.25" "V3.3.26" "V3.3.27" "V3.3.28" "V3.3.29" "V3.3.30" "V3.3.31"
+[141] "V3.3.32" "V3.3.33" "V3.3.34" "V3.3.35" "V4.1.20" "V4.1.21" "V4.1.22"
+[148] "V4.1.23" "V4.1.24" "V4.1.25" "V4.1.26" "V4.1.27" "V4.1.28" "V4.1.29"
+[155] "V4.1.30" "V4.1.31" "V4.1.32" "V4.1.33" "V4.1.34" "V4.1.35" "V4.2.20"
+[162] "V4.2.21" "V4.2.22" "V4.2.23" "V4.2.24" "V4.2.25" "V4.2.26" "V4.2.27"
+[169] "V4.2.28" "V4.2.29" "V4.2.30" "V4.2.31" "V4.2.32" "V4.2.33" "V4.2.34"
+[176] "V4.2.35" "V4.3.20" "V4.3.21" "V4.3.22" "V4.3.23" "V4.3.24" "V4.3.25"
+[183] "V4.3.26" "V4.3.27" "V4.3.28" "V4.3.29" "V4.3.30" "V4.3.31" "V4.3.32"
+[190] "V4.3.33" "V4.3.34" "V4.3.35"
+> fnFs.s1 <- fnFs.s1[to.keep]
+> fnRs.s1 <- fnRs.s1[to.keep]
+> 
+> # Fully Specify the path for the fnFs and fnRs
+> fnFs.s1 <- file.path(path, '3_demultiplex/s1r1_split_samples/', fnFs.s1)
+> fnRs.s1 <- file.path(path, '3_demultiplex/s1r2_split_samples/', fnRs.s1)
+> 
+> # Examine qulaity profiles of the forward and reverse reads
+> p <- plotQualityProfile(fnFs.s1[[1]]) 
+> ggsave('Forward_quality_profile_s1.png', plot=p)
+Saving 7 x 7 in image
+> p <- plotQualityProfile(fnRs.s1[[1]]) 
+> ggsave('Reverse_quality_profile_s1.png', plot=p)
+Saving 7 x 7 in image
+> 
+> # Perform filtering and trimming
+> filtpath <- file.path(path, "4_filter")
+> dir.create(filtpath)
+Warning message:
+In dir.create(filtpath) :
+  '/data/davidlab/users/jds/pcrbias/results/dada2//4_filter' already exists
+> 
+> # For the first sequencing run
+> dir.create(file.path(filtpath,'s1'))
+Warning message:
+In dir.create(file.path(filtpath, "s1")) :
+  '/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1' already exists
+> filtFs.s1 <- file.path(filtpath, 's1', paste0(sample.names.1,"_F_filt.fastq.gz"))
+> filtRs.s1 <- file.path(filtpath, 's1', paste0(sample.names.1,"_R_filt.fastq.gz"))
+> for (i in seq_along(fnFs.s1)){
++     fastqPairedFilter(c(fnFs.s1[i], fnRs.s1[i]), c(filtFs.s1[i], filtRs.s1[i]),
++                       trimLeft=c(10,0), truncLen=c(150, 140),
++                       maxN=0, maxEE=2, truncQ=2,
++                       compress=TRUE, verbose=TRUE,
++                       rm.phix=TRUE)
++ }
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.20_R_filt.fastq.gz
+Read in 31740 paired-sequences, output 31423 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.21_R_filt.fastq.gz
+Read in 16507 paired-sequences, output 16328 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.22_R_filt.fastq.gz
+Read in 45438 paired-sequences, output 44987 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.23_R_filt.fastq.gz
+Read in 41513 paired-sequences, output 41074 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.24_R_filt.fastq.gz
+Read in 44950 paired-sequences, output 44482 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.25_R_filt.fastq.gz
+Read in 8308 paired-sequences, output 8227 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.26_R_filt.fastq.gz
+Read in 36492 paired-sequences, output 36103 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.27_R_filt.fastq.gz
+Read in 19128 paired-sequences, output 18946 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.28_R_filt.fastq.gz
+Read in 42759 paired-sequences, output 42294 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.29_R_filt.fastq.gz
+Read in 39840 paired-sequences, output 39455 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.30_R_filt.fastq.gz
+Read in 22524 paired-sequences, output 22312 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.31_R_filt.fastq.gz
+Read in 29781 paired-sequences, output 29276 (98.3%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.32_R_filt.fastq.gz
+Read in 49295 paired-sequences, output 48809 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.33_R_filt.fastq.gz
+Read in 44149 paired-sequences, output 43709 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.34_R_filt.fastq.gz
+Read in 47089 paired-sequences, output 46629 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.1.35_R_filt.fastq.gz
+Read in 37408 paired-sequences, output 37037 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.20_R_filt.fastq.gz
+Read in 14904 paired-sequences, output 14739 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.21_R_filt.fastq.gz
+Read in 33977 paired-sequences, output 33611 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.22_R_filt.fastq.gz
+Read in 41286 paired-sequences, output 40868 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.23_R_filt.fastq.gz
+Read in 43353 paired-sequences, output 42922 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.24_R_filt.fastq.gz
+Read in 38059 paired-sequences, output 37688 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.25_R_filt.fastq.gz
+Read in 12580 paired-sequences, output 12460 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.26_R_filt.fastq.gz
+Read in 40283 paired-sequences, output 39877 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.27_R_filt.fastq.gz
+Read in 24177 paired-sequences, output 23948 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.28_R_filt.fastq.gz
+Read in 41518 paired-sequences, output 41068 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.29_R_filt.fastq.gz
+Read in 39124 paired-sequences, output 38766 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.30_R_filt.fastq.gz
+Read in 45703 paired-sequences, output 45248 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.31_R_filt.fastq.gz
+Read in 41641 paired-sequences, output 41236 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.32_R_filt.fastq.gz
+Read in 38509 paired-sequences, output 38164 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.33_R_filt.fastq.gz
+Read in 44936 paired-sequences, output 44465 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.34_R_filt.fastq.gz
+Read in 37382 paired-sequences, output 36978 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.2.35_R_filt.fastq.gz
+Read in 34609 paired-sequences, output 34252 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.20_R_filt.fastq.gz
+Read in 28656 paired-sequences, output 28358 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.21_R_filt.fastq.gz
+Read in 14097 paired-sequences, output 13946 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.22_R_filt.fastq.gz
+Read in 5372 paired-sequences, output 5313 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.23_R_filt.fastq.gz
+Read in 26504 paired-sequences, output 26268 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.24_R_filt.fastq.gz
+Read in 42253 paired-sequences, output 41863 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.25_R_filt.fastq.gz
+Read in 45814 paired-sequences, output 45304 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.26_R_filt.fastq.gz
+Read in 42407 paired-sequences, output 41975 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.27_R_filt.fastq.gz
+Read in 26771 paired-sequences, output 26484 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.28_R_filt.fastq.gz
+Read in 38702 paired-sequences, output 38322 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.29_R_filt.fastq.gz
+Read in 37842 paired-sequences, output 37483 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.30_R_filt.fastq.gz
+Read in 46302 paired-sequences, output 45878 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.31_R_filt.fastq.gz
+Read in 37255 paired-sequences, output 36883 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.32_R_filt.fastq.gz
+Read in 44226 paired-sequences, output 43794 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.33_R_filt.fastq.gz
+Read in 36779 paired-sequences, output 36363 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.34_R_filt.fastq.gz
+Read in 31134 paired-sequences, output 30837 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V1.3.35_R_filt.fastq.gz
+Read in 38483 paired-sequences, output 38107 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.20_R_filt.fastq.gz
+Read in 14226 paired-sequences, output 14094 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.21_R_filt.fastq.gz
+Read in 24256 paired-sequences, output 24008 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.22_R_filt.fastq.gz
+Read in 35367 paired-sequences, output 34994 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.23_R_filt.fastq.gz
+Read in 35333 paired-sequences, output 34988 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.24_R_filt.fastq.gz
+Read in 45016 paired-sequences, output 44539 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.25_R_filt.fastq.gz
+Read in 10574 paired-sequences, output 10474 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.26_R_filt.fastq.gz
+Read in 42022 paired-sequences, output 41579 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.27_R_filt.fastq.gz
+Read in 36660 paired-sequences, output 36279 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.28_R_filt.fastq.gz
+Read in 44783 paired-sequences, output 44348 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.29_R_filt.fastq.gz
+Read in 41754 paired-sequences, output 41295 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.30_R_filt.fastq.gz
+Read in 35490 paired-sequences, output 35179 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.31_R_filt.fastq.gz
+Read in 40615 paired-sequences, output 40218 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.32_R_filt.fastq.gz
+Read in 41226 paired-sequences, output 40752 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.33_R_filt.fastq.gz
+Read in 38491 paired-sequences, output 38078 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.34_R_filt.fastq.gz
+Read in 45881 paired-sequences, output 45420 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.1.35_R_filt.fastq.gz
+Read in 40201 paired-sequences, output 39816 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.20_R_filt.fastq.gz
+Read in 11600 paired-sequences, output 11475 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.21_R_filt.fastq.gz
+Read in 22036 paired-sequences, output 21814 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.22_R_filt.fastq.gz
+Read in 39779 paired-sequences, output 39370 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.23_R_filt.fastq.gz
+Read in 44226 paired-sequences, output 43813 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.24_R_filt.fastq.gz
+Read in 42622 paired-sequences, output 42167 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.25_R_filt.fastq.gz
+Read in 12610 paired-sequences, output 12475 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.26_R_filt.fastq.gz
+Read in 41539 paired-sequences, output 41163 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.27_R_filt.fastq.gz
+Read in 18530 paired-sequences, output 18335 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.28_R_filt.fastq.gz
+Read in 37809 paired-sequences, output 37424 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.29_R_filt.fastq.gz
+Read in 38448 paired-sequences, output 38060 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.30_R_filt.fastq.gz
+Read in 43468 paired-sequences, output 43049 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.31_R_filt.fastq.gz
+Read in 34187 paired-sequences, output 33718 (98.6%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.32_R_filt.fastq.gz
+Read in 17300 paired-sequences, output 16131 (93.2%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.33_R_filt.fastq.gz
+Read in 47414 paired-sequences, output 46888 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.34_R_filt.fastq.gz
+Read in 44714 paired-sequences, output 44284 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.2.35_R_filt.fastq.gz
+Read in 35714 paired-sequences, output 35256 (98.7%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.20_R_filt.fastq.gz
+Read in 14520 paired-sequences, output 14375 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.21_R_filt.fastq.gz
+Read in 15418 paired-sequences, output 15305 (99.3%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.22_R_filt.fastq.gz
+Read in 10926 paired-sequences, output 10826 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.23_R_filt.fastq.gz
+Read in 30438 paired-sequences, output 30103 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.24_R_filt.fastq.gz
+Read in 42815 paired-sequences, output 42417 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.25_R_filt.fastq.gz
+Read in 33960 paired-sequences, output 33584 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.26_R_filt.fastq.gz
+Read in 29842 paired-sequences, output 29562 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.27_R_filt.fastq.gz
+Read in 17395 paired-sequences, output 17187 (98.8%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.28_R_filt.fastq.gz
+Read in 43617 paired-sequences, output 43162 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.29_R_filt.fastq.gz
+Read in 38623 paired-sequences, output 38249 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.30_R_filt.fastq.gz
+Read in 42912 paired-sequences, output 42502 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.31_R_filt.fastq.gz
+Read in 39044 paired-sequences, output 38624 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.32_R_filt.fastq.gz
+Read in 39631 paired-sequences, output 39242 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.33_R_filt.fastq.gz
+Read in 38593 paired-sequences, output 38080 (98.7%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.34_R_filt.fastq.gz
+Read in 41105 paired-sequences, output 40691 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V2.3.35_R_filt.fastq.gz
+Read in 41215 paired-sequences, output 40802 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.20_R_filt.fastq.gz
+Read in 29208 paired-sequences, output 28887 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.21_R_filt.fastq.gz
+Read in 29666 paired-sequences, output 29354 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.22_R_filt.fastq.gz
+Read in 42824 paired-sequences, output 42345 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.23_R_filt.fastq.gz
+Read in 33548 paired-sequences, output 33158 (98.8%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.24_R_filt.fastq.gz
+Read in 43282 paired-sequences, output 42790 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.25_R_filt.fastq.gz
+Read in 11255 paired-sequences, output 11127 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.26_R_filt.fastq.gz
+Read in 39664 paired-sequences, output 39232 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.27_R_filt.fastq.gz
+Read in 14090 paired-sequences, output 13905 (98.7%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.28_R_filt.fastq.gz
+Read in 42121 paired-sequences, output 41675 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.29_R_filt.fastq.gz
+Read in 35834 paired-sequences, output 35437 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.30_R_filt.fastq.gz
+Read in 35625 paired-sequences, output 35257 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.31_R_filt.fastq.gz
+Read in 35223 paired-sequences, output 34666 (98.4%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.32_R_filt.fastq.gz
+Read in 37560 paired-sequences, output 37153 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.33_R_filt.fastq.gz
+Read in 37572 paired-sequences, output 37137 (98.8%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.34_R_filt.fastq.gz
+Read in 40710 paired-sequences, output 40251 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.1.35_R_filt.fastq.gz
+Read in 25113 paired-sequences, output 24843 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.20_R_filt.fastq.gz
+Read in 21968 paired-sequences, output 21733 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.21_R_filt.fastq.gz
+Read in 29323 paired-sequences, output 28992 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.22_R_filt.fastq.gz
+Read in 45449 paired-sequences, output 44936 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.23_R_filt.fastq.gz
+Read in 44115 paired-sequences, output 43638 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.24_R_filt.fastq.gz
+Read in 35789 paired-sequences, output 35391 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.25_R_filt.fastq.gz
+Read in 12593 paired-sequences, output 12461 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.26_R_filt.fastq.gz
+Read in 34250 paired-sequences, output 33873 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.27_R_filt.fastq.gz
+Read in 14156 paired-sequences, output 14007 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.28_R_filt.fastq.gz
+Read in 38160 paired-sequences, output 37746 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.29_R_filt.fastq.gz
+Read in 39396 paired-sequences, output 38945 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.30_R_filt.fastq.gz
+Read in 35845 paired-sequences, output 35490 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.31_R_filt.fastq.gz
+Read in 38783 paired-sequences, output 38315 (98.8%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.32_R_filt.fastq.gz
+Read in 39902 paired-sequences, output 39474 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.33_R_filt.fastq.gz
+Read in 39602 paired-sequences, output 39172 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.34_R_filt.fastq.gz
+Read in 37700 paired-sequences, output 37294 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.2.35_R_filt.fastq.gz
+Read in 28279 paired-sequences, output 27973 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.20_R_filt.fastq.gz
+Read in 18013 paired-sequences, output 17815 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.21_R_filt.fastq.gz
+Read in 17625 paired-sequences, output 17418 (98.8%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.22_R_filt.fastq.gz
+Read in 15742 paired-sequences, output 15543 (98.7%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.23_R_filt.fastq.gz
+Read in 32663 paired-sequences, output 32338 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.24_R_filt.fastq.gz
+Read in 40792 paired-sequences, output 40337 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.25_R_filt.fastq.gz
+Read in 45890 paired-sequences, output 45365 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.26_R_filt.fastq.gz
+Read in 21363 paired-sequences, output 21146 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.27_R_filt.fastq.gz
+Read in 9655 paired-sequences, output 9561 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.28_R_filt.fastq.gz
+Read in 39443 paired-sequences, output 39013 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.29_R_filt.fastq.gz
+Read in 57817 paired-sequences, output 57181 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.30_R_filt.fastq.gz
+Read in 40588 paired-sequences, output 40173 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.31_R_filt.fastq.gz
+Read in 43604 paired-sequences, output 43113 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.32_R_filt.fastq.gz
+Read in 31333 paired-sequences, output 30961 (98.8%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.33_R_filt.fastq.gz
+Read in 38788 paired-sequences, output 38379 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.34_R_filt.fastq.gz
+Read in 36848 paired-sequences, output 36427 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V3.3.35_R_filt.fastq.gz
+Read in 38325 paired-sequences, output 37860 (98.8%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.20_R_filt.fastq.gz
+Read in 39212 paired-sequences, output 38795 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.21_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.21_R_filt.fastq.gz
+Read in 40989 paired-sequences, output 40553 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.22_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.22_R_filt.fastq.gz
+Read in 40952 paired-sequences, output 40560 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.23_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.23_R_filt.fastq.gz
+Read in 37230 paired-sequences, output 36833 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.24_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.24_R_filt.fastq.gz
+Read in 41091 paired-sequences, output 40673 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.25_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.25_R_filt.fastq.gz
+Read in 13576 paired-sequences, output 13437 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.26_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.26_R_filt.fastq.gz
+Read in 37271 paired-sequences, output 36926 (99.1%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.27_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.27_R_filt.fastq.gz
+Read in 25177 paired-sequences, output 24917 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.28_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.28_R_filt.fastq.gz
+Read in 39107 paired-sequences, output 38662 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.29_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.29_R_filt.fastq.gz
+Read in 37979 paired-sequences, output 37551 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.30_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.30_R_filt.fastq.gz
+Read in 40409 paired-sequences, output 40022 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.31_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.31_R_filt.fastq.gz
+Read in 34833 paired-sequences, output 34490 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.32_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.32_R_filt.fastq.gz
+Read in 39174 paired-sequences, output 38730 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.33_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.33_R_filt.fastq.gz
+Read in 43513 paired-sequences, output 43050 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.34_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.34_R_filt.fastq.gz
+Read in 38684 paired-sequences, output 38255 (98.9%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.35_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.1.35_R_filt.fastq.gz
+Read in 33583 paired-sequences, output 33248 (99%) filtered paired-sequences.
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.2.20_F_filt.fastq.gz
+Overwriting file:/data/davidlab/users/jds/pcrbias/results/dada2//4_filter/s1/V4.2.20_R_filt.fastq.gz
+Read in 33727 paired-sequences, output 33392 (99%) filtered paired-sequences.
+Read in 41442 paired-sequences, output 41017 (99%) filtered paired-sequences.
+Read in 40494 paired-sequences, output 40093 (99%) filtered paired-sequences.
+Read in 40243 paired-sequences, output 39835 (99%) filtered paired-sequences.
+Read in 42771 paired-sequences, output 42307 (98.9%) filtered paired-sequences.
+Read in 12415 paired-sequences, output 12260 (98.8%) filtered paired-sequences.
+Read in 46260 paired-sequences, output 45733 (98.9%) filtered paired-sequences.
+Read in 17695 paired-sequences, output 17502 (98.9%) filtered paired-sequences.
+Read in 37217 paired-sequences, output 36837 (99%) filtered paired-sequences.
+Read in 40284 paired-sequences, output 39843 (98.9%) filtered paired-sequences.
+Read in 42711 paired-sequences, output 42298 (99%) filtered paired-sequences.
+Read in 39448 paired-sequences, output 38970 (98.8%) filtered paired-sequences.
+Read in 45360 paired-sequences, output 44908 (99%) filtered paired-sequences.
+Read in 40751 paired-sequences, output 40340 (99%) filtered paired-sequences.
+Read in 31985 paired-sequences, output 31645 (98.9%) filtered paired-sequences.
+Read in 48031 paired-sequences, output 47503 (98.9%) filtered paired-sequences.
+Read in 20579 paired-sequences, output 20354 (98.9%) filtered paired-sequences.
+Read in 39469 paired-sequences, output 39014 (98.8%) filtered paired-sequences.
+Read in 20022 paired-sequences, output 19823 (99%) filtered paired-sequences.
+Read in 37880 paired-sequences, output 37473 (98.9%) filtered paired-sequences.
+Read in 38467 paired-sequences, output 38076 (99%) filtered paired-sequences.
+Read in 40123 paired-sequences, output 39705 (99%) filtered paired-sequences.
+Read in 20141 paired-sequences, output 19918 (98.9%) filtered paired-sequences.
+Read in 16493 paired-sequences, output 16287 (98.8%) filtered paired-sequences.
+Read in 32305 paired-sequences, output 31989 (99%) filtered paired-sequences.
+Read in 41710 paired-sequences, output 41302 (99%) filtered paired-sequences.
+Read in 35479 paired-sequences, output 35125 (99%) filtered paired-sequences.
+Read in 50339 paired-sequences, output 49772 (98.9%) filtered paired-sequences.
+Read in 33209 paired-sequences, output 32880 (99%) filtered paired-sequences.
+Read in 37804 paired-sequences, output 37478 (99.1%) filtered paired-sequences.
+Read in 34997 paired-sequences, output 34634 (99%) filtered paired-sequences.
+Read in 38041 paired-sequences, output 37637 (98.9%) filtered paired-sequences.
+> 
+> proc.time()
+   user  system elapsed 
+848.273   3.889 855.241 
