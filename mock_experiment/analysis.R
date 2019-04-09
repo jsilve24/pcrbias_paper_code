@@ -1,5 +1,5 @@
 library(tidyverse)
-library(mongrel)
+library(stray)
 library(driver)
 library(phyloseq)
 
@@ -54,7 +54,7 @@ d <- as(otus, "matrix") %>%
          PostFilterChange=sample_data(ps)$PostFilterChange[sample], 
          mean=val)
 
-# Fit Mongrel -------------------------------------------------------------
+# Fit stray -------------------------------------------------------------
 
 #Y <- t(as(otu_table(ps), "matrix"))
 Y <- t(otus)
@@ -62,11 +62,11 @@ X <- rbind(1,
            sample_data(ps)$PCRCycles,
            as.numeric(factor(sample_data(ps)$PostFilterChange))-1)
 
-fit <- mongrel(Y, X, Gamma = 2*diag(3))
+fit <- pibble(Y, X, Gamma = 2*diag(3))
 p <- ppc(fit)
 ggsave("ppc_mock.pdf", plot=p, height=4, width=5, units="in")
 
-fit <- mongrel_to_clr(fit)
+fit <- to_clr(fit)
 
 LambdaX <- predict(fit, newdata = cbind(c(1,0,0),fit$X), pars="LambdaX", use_names = FALSE) %>%
   gather_array(val, coord, sample, iter) %>% 

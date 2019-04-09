@@ -1,6 +1,6 @@
 library(tidyverse)
 library(driver) # devtools::install_github("jsilve24/driver")
-library(mongrel) # devtools::install_github("jsilve24/mongrel")
+library(stray) # devtools::install_github("jsilve24/stray")
 library(phyloseq)
 library(NVC) # devtools::install_github("jsilve24/NVC")
 library(DECIPHER) # for computing sequence similarity
@@ -44,7 +44,7 @@ tmp[tmp==other] <- "other"
 taxa_names(ps) <- tmp
 rm(tmp, d, other)
 
-# fit mongrel -------------------------------------------------------------
+# fit stray -------------------------------------------------------------
 
 Y <- as(t(otu_table(ps)), "matrix")
 X <- t(as.matrix(model.matrix(~BiasPCRCycleNum + factor(BiasPCRMachine), 
@@ -66,14 +66,14 @@ upsilon <- ntaxa(ps)+5
 Theta <- matrix(0, ntaxa(ps)-1,ncol(Gamma))
 
 # fit model
-fit <- mongrel(Y, X, upsilon, Theta, Gamma, Xi)
+fit <- pibble(Y, X, upsilon, Theta, Gamma, Xi)
 
-fit <- mongrel_to_clr(fit)
+fit <- to_clr(fit)
 
 
 # analyze results ---------------------------------------------------------
 
-fit <- mongrel:::name.mongrelfit(fit)
+fit <- stray:::name.pibblefit(fit)
 coord.names <- dimnames(fit$Eta)[[1]]
 
 p <- plot(fit, focus.cov=names_covariates(fit)[-(1:5)])
@@ -112,7 +112,7 @@ ggsave("normed_vector_with3.pdf", plot=p, height=4, width=5.5, units="in")
 ps <- prune_samples(sample_data(ps)$BiasPCRMachine != 3, ps)
 
 
-# fit mongrel -------------------------------------------------------------
+# fit stray -------------------------------------------------------------
 
 Y <- as(t(otu_table(ps)), "matrix")
 X <- t(as.matrix(model.matrix(~BiasPCRCycleNum + factor(BiasPCRMachine), 
@@ -140,17 +140,17 @@ for (i in 1:4){ # for each donor
 }
 
 # fit model
-fit <- mongrel(Y, X, upsilon, Theta, Gamma, Xi)
+fit <- pibble(Y, X, upsilon, Theta, Gamma, Xi)
 
 p <- ppc(fit)
 ggsave("ppc_without3.pdf", plot=p, height=4, width=5, units="in")
 
-fit <- mongrel_to_clr(fit)
+fit <- to_clr(fit)
 
 
 # analyze results ---------------------------------------------------------
 
-fit <- mongrel:::name.mongrelfit(fit)
+fit <- stray:::name.pibblefit(fit)
 coord.names <- dimnames(fit$Eta)[[1]]
 
 d <- (Y+0.65) %>% 
@@ -280,7 +280,7 @@ ggsave("bias_real.pdf", height=4, width=6, units="in")
 
 # Predicting bias - Eigen -------------------------------------------------
 
-fit <- mongrel_to_clr(fit)
+fit <- to_clr(fit)
 seq.dist <- as.matrix(stringDist(refseq(ps)))
 seq.dist.eigen <- eigen(seq.dist)$vectors[,1:10]
 res <- list()
@@ -321,7 +321,7 @@ summary(r.squared)
 
 # Predicting Bias GP - alr ---------------------------------------------------
 
-fit <- mongrel_to_alr(fit, which(names_categories(fit) == "other"))
+fit <- to_alr(fit, which(names_categories(fit) == "other"))
 seq.dist <- as.matrix(stringDist(refseq(ps)))
 seq.dist <- seq.dist[-fit$alr_base, -fit$alr_base]
 length.scales <- c(.01, .1, .2, .5, 1, 2, 5, 6, 7, 8, 10, 15, 20, 30, 40, 50, 60, 70, 80)
