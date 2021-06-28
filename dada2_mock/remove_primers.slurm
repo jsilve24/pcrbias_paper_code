@@ -8,7 +8,7 @@
 #SBATCH --mail-user=justin.silverman@duke.edu
 
 PATH1=0_data_raw/run1/
-MAP1=0_mapping/run1/2018.04.24MappingFile.txt
+MAP1=0_mapping/run1/2020.02.28MappingFile.txt
 
 # Removing primers see evernote note "Removing Primers from Illumina Data (Paired-End Fastq)
 # Using trimmomatic 

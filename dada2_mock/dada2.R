@@ -2,7 +2,7 @@
 ## Following tutorial http://benjjneb.github.io/dada2/tutorial.html
 ## and here http://benjjneb.github.io/dada2/tutorial.html
 
-setwd('/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/')
+setwd('/data/davidlab/users/jds/pcrbias/results/2020-02-28_mock_community_redo/')
 
 library(dada2); packageVersion("dada2")
 library(ggplot2); packageVersion("ggplot2")
@@ -12,8 +12,8 @@ library(phangorn); packageVersion("phangorn")
 library(msa); packageVersion("msa")
 set.seed(4)
 
-filtpath <- "/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/4_filter"
-mappath <- "0_mapping/run1/2018.04.24MappingFile.txt"
+filtpath <- "/data/davidlab/users/jds/pcrbias/results/2020-02-28_mock_community_redo/4_filter"
+mappath <- "0_mapping/run1/2020.02.28MappingFile.txt"
 
 # Find filenames ----------------------------------------------------------
 
@@ -37,7 +37,9 @@ sample.names.1 <- sapply(strsplit(basename(filtFs.s1), "_"), `[`, 1)
 # Learn Error Rates
 ## aim to learn from about 1M total reads - so just need subset of samples 
 ## source: http://benjjneb.github.io/dada2/bigdata.html
-filts.learn.s1 <- sample(sample.names.1, 40)
+# EDIT: edited from size=40 to size=length(sample.names.1) as fewer than 
+#       40 samples in this dataset
+filts.learn.s1 <- sample(sample.names.1, length(sample.names.1))
 
 derepFs.s1.learn <- derepFastq(filtFs.s1[filts.learn.s1], verbose=TRUE)
 derepRs.s1.learn <- derepFastq(filtRs.s1[filts.learn.s1], verbose=TRUE)

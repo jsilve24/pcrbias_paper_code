@@ -1,15 +1,46 @@
 TrimmomaticPE: Started with arguments:
  0_data_raw/run1//Undetermined_S0_L001_R1_001.fastq.gz 0_data_raw/run1//Undetermined_S0_L001_R2_001.fastq.gz 1_remove_primers/run1/R1.paired.fastq.gz 1_remove_primers/run1/R1.unpaired.fastq.gz 1_remove_primers/run1/R2.paired.fastq.gz 1_remove_primers/run1/R2.unpaired.fastq.gz ILLUMINACLIP:techseqs.fa:2:30:10
-java.io.FileNotFoundException: /gpfs/fs1/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/techseqs.fa (No such file or directory)
-	at java.io.FileInputStream.open(Native Method)
-	at java.io.FileInputStream.<init>(FileInputStream.java:146)
-	at org.usadellab.trimmomatic.fasta.FastaParser.parse(FastaParser.java:54)
-	at org.usadellab.trimmomatic.trim.IlluminaClippingTrimmer.loadSequences(IlluminaClippingTrimmer.java:110)
-	at org.usadellab.trimmomatic.trim.IlluminaClippingTrimmer.makeIlluminaClippingTrimmer(IlluminaClippingTrimmer.java:71)
-	at org.usadellab.trimmomatic.trim.TrimmerFactory.makeTrimmer(TrimmerFactory.java:32)
-	at org.usadellab.trimmomatic.Trimmomatic.createTrimmers(Trimmomatic.java:59)
-	at org.usadellab.trimmomatic.TrimmomaticPE.run(TrimmomaticPE.java:536)
-	at org.usadellab.trimmomatic.Trimmomatic.main(Trimmomatic.java:80)
+Using Medium Clipping Sequence: 'ATTAGAAACCCCTGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGATACCCCGGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGAAACCCGAGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGAAACCCTGGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGAAACCCGGGTAGTCC'
+Using Medium Clipping Sequence: 'GGACTACCGGGGTATCTAAT'
+Using Medium Clipping Sequence: 'GGACTACCAGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GGACTACCCGGGTATCTAAT'
+Using Medium Clipping Sequence: 'ATTAGATACCCTTGTAGTCC'
+Using Medium Clipping Sequence: 'GGACTACCGGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'TTACCGCGGCTGCTGGCAC'
+Using Medium Clipping Sequence: 'GGACTACTCGGGTATCTAAT'
+Using Medium Clipping Sequence: 'GGACTACTGGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GGACTACTGGGGTATCTAAT'
+Using Medium Clipping Sequence: 'GGACTACCAGGGTATCTAAT'
+Using Medium Clipping Sequence: 'GGACTACTCGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GGACTACTAGGGTATCTAAT'
+Using Medium Clipping Sequence: 'GGACTACTAGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GGACTACACGGGTATCTAAT'
+Using Medium Clipping Sequence: 'ATTAGAAACCCCGGTAGTCC'
+Using Medium Clipping Sequence: 'GGACTACACGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GGACTACAGGGGTATCTAAT'
+Using Medium Clipping Sequence: 'ATTAGAAACCCTTGTAGTCC'
+Using Medium Clipping Sequence: 'GGACTACAGGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GGACTACCCGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GGACTACAAGGGTATCTAAT'
+Using Medium Clipping Sequence: 'GGACTACAAGGGTTTCTAAT'
+Using Medium Clipping Sequence: 'GTGCCAGCAGCCGCGGTAA'
+Using Medium Clipping Sequence: 'GTGCCAGCCGCCGCGGTAA'
+Using Medium Clipping Sequence: 'ATTAGATACCCTAGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGATACCCCTGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGATACCCCAGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGAAACCCTAGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGAAACCCCAGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGATACCCGGGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGATACCCGTGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGATACCCTGGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGATACCCGAGTAGTCC'
+Using Medium Clipping Sequence: 'ATTAGAAACCCGTGTAGTCC'
+Using Medium Clipping Sequence: 'TTACCGCGGCGGCTGGCAC'
+ILLUMINACLIP: Using 0 prefix pairs, 40 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
 Quality encoding detected as phred33
-Input Read Pairs: 9259176 Both Surviving: 9259176 (100.00%) Forward Only Surviving: 0 (0.00%) Reverse Only Surviving: 0 (0.00%) Dropped: 0 (0.00%)
+Input Read Pairs: 11209460 Both Surviving: 11209245 (100.00%) Forward Only Surviving: 5 (0.00%) Reverse Only Surviving: 18 (0.00%) Dropped: 192 (0.00%)
 TrimmomaticPE: Completed successfully

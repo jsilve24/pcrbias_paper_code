@@ -2,13 +2,13 @@
 ## Following tutorial http://benjjneb.github.io/dada2/tutorial.html
 ## and here http://benjjneb.github.io/dada2/bigdata.html
 
-setwd('/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/')
+setwd('/data/davidlab/users/jds/pcrbias/results/2020-02-28_mock_community_redo/')
 
 library(dada2); packageVersion("dada2")
 library(ShortRead); packageVersion("ShortRead")
 library(ggplot2); packageVersion("ggplot2")
 
-path <- "/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/"
+path <- "/data/davidlab/users/jds/pcrbias/results/2020-02-28_mock_community_redo/"
 
 # Filtering and Trimming --------------------------------------------------
 
@@ -23,10 +23,10 @@ fnRs.s1 <- sort(fnRs.s1)
 sample.names.1 <- sapply(strsplit(fnFs.s1,".fastq", fixed=TRUE), `[`, 1)
 
 # Remove extraneous samples ## EDIT THIS AS NEEDED
-# to.keep <- grepl("^V", sample.names.1)
+# to.keep <- grepl("^[[:upper:]]\\..*", sample.names.1)
 # sample.names.1 <- sample.names.1[to.keep]
 # print(sample.names.1)
-# fnFs.s1 <- fnFs.s1[to.keep] 
+# fnFs.s1 <- fnFs.s1[to.keep]
 # fnRs.s1 <- fnRs.s1[to.keep]
 
 # Fully Specify the path for the fnFs and fnRs

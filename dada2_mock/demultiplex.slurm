@@ -8,7 +8,7 @@
 #SBATCH --mail-user=justin.silverman@duke.edu
 
 PATH1=2_sync_barcodes/run1
-MAP1=0_mapping/run1/2018.04.24MappingFile.txt
+MAP1=0_mapping/run1/2020.02.28MappingFile.txt
 
 module load qiime
 

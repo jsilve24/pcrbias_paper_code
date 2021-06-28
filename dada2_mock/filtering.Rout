@@ -21,10 +21,12 @@ Type 'q()' to quit R.
 > ## Following tutorial http://benjjneb.github.io/dada2/tutorial.html
 > ## and here http://benjjneb.github.io/dada2/bigdata.html
 > 
-> setwd('/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/')
+> setwd('/data/davidlab/users/jds/pcrbias/results/2020-02-28_mock_community_redo/')
 > 
 > library(dada2); packageVersion("dada2")
 Loading required package: Rcpp
+Warning message:
+package ‘Rcpp’ was built under R version 3.4.2 
 [1] ‘1.4.0’
 > library(ShortRead); packageVersion("ShortRead")
 Loading required package: BiocGenerics
@@ -109,9 +111,11 @@ The following object is masked from ‘package:base’:
 
 [1] ‘1.34.0’
 > library(ggplot2); packageVersion("ggplot2")
-[1] ‘2.2.1’
+Warning message:
+package ‘ggplot2’ was built under R version 3.4.2 
+[1] ‘3.1.1’
 > 
-> path <- "/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment/"
+> path <- "/data/davidlab/users/jds/pcrbias/results/2020-02-28_mock_community_redo/"
 > 
 > # Filtering and Trimming --------------------------------------------------
 > 
@@ -126,10 +130,10 @@ The following object is masked from ‘package:base’:
 > sample.names.1 <- sapply(strsplit(fnFs.s1,".fastq", fixed=TRUE), `[`, 1)
 > 
 > # Remove extraneous samples ## EDIT THIS AS NEEDED
-> # to.keep <- grepl("^V", sample.names.1)
+> # to.keep <- grepl("^[[:upper:]]\\..*", sample.names.1)
 > # sample.names.1 <- sample.names.1[to.keep]
 > # print(sample.names.1)
-> # fnFs.s1 <- fnFs.s1[to.keep] 
+> # fnFs.s1 <- fnFs.s1[to.keep]
 > # fnRs.s1 <- fnRs.s1[to.keep]
 > 
 > # Fully Specify the path for the fnFs and fnRs
@@ -147,15 +151,9 @@ Saving 7 x 7 in image
 > # Perform filtering and trimming
 > filtpath <- file.path(path, "4_filter")
 > dir.create(filtpath)
-Warning message:
-In dir.create(filtpath) :
-  '/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment//4_filter' already exists
 > 
 > # For the first sequencing run
 > dir.create(file.path(filtpath,'s1'))
-Warning message:
-In dir.create(file.path(filtpath, "s1")) :
-  '/data/davidlab/users/jds/pcrbias/results/dada2_second_experiment//4_filter/s1' already exists
 > filtFs.s1 <- file.path(filtpath, 's1', paste0(sample.names.1,"_F_filt.fastq.gz"))
 > filtRs.s1 <- file.path(filtpath, 's1', paste0(sample.names.1,"_R_filt.fastq.gz"))
 > for (i in seq_along(fnFs.s1)){
@@ -165,58 +163,115 @@ In dir.create(file.path(filtpath, "s1")) :
 +                       compress=TRUE, verbose=TRUE,
 +                       rm.phix=TRUE)
 + }
-Read in 92230 paired-sequences, output 90292 (97.9%) filtered paired-sequences.
-Read in 90562 paired-sequences, output 88492 (97.7%) filtered paired-sequences.
-Read in 81551 paired-sequences, output 79832 (97.9%) filtered paired-sequences.
-Read in 60195 paired-sequences, output 58854 (97.8%) filtered paired-sequences.
-Read in 54151 paired-sequences, output 52891 (97.7%) filtered paired-sequences.
-Read in 72249 paired-sequences, output 70620 (97.7%) filtered paired-sequences.
-Read in 60512 paired-sequences, output 59208 (97.8%) filtered paired-sequences.
-Read in 84494 paired-sequences, output 82640 (97.8%) filtered paired-sequences.
-Read in 82813 paired-sequences, output 81156 (98%) filtered paired-sequences.
-Read in 86131 paired-sequences, output 84288 (97.9%) filtered paired-sequences.
-Read in 84851 paired-sequences, output 82954 (97.8%) filtered paired-sequences.
-Read in 83528 paired-sequences, output 81736 (97.9%) filtered paired-sequences.
-Read in 65771 paired-sequences, output 64266 (97.7%) filtered paired-sequences.
-Read in 90811 paired-sequences, output 88936 (97.9%) filtered paired-sequences.
-Read in 81266 paired-sequences, output 79488 (97.8%) filtered paired-sequences.
-Read in 121762 paired-sequences, output 119078 (97.8%) filtered paired-sequences.
-Read in 121977 paired-sequences, output 119274 (97.8%) filtered paired-sequences.
-Read in 84235 paired-sequences, output 82426 (97.9%) filtered paired-sequences.
-Read in 89029 paired-sequences, output 87141 (97.9%) filtered paired-sequences.
-Read in 84175 paired-sequences, output 82425 (97.9%) filtered paired-sequences.
-Read in 145 paired-sequences, output 143 (98.6%) filtered paired-sequences.
-Read in 243 paired-sequences, output 241 (99.2%) filtered paired-sequences.
-Read in 87515 paired-sequences, output 85521 (97.7%) filtered paired-sequences.
-Read in 137 paired-sequences, output 133 (97.1%) filtered paired-sequences.
-Read in 60 paired-sequences, output 60 (100%) filtered paired-sequences.
-Read in 38 paired-sequences, output 37 (97.4%) filtered paired-sequences.
-Read in 39 paired-sequences, output 38 (97.4%) filtered paired-sequences.
-Read in 39440 paired-sequences, output 38515 (97.7%) filtered paired-sequences.
-Read in 22828 paired-sequences, output 22311 (97.7%) filtered paired-sequences.
-Read in 20863 paired-sequences, output 20408 (97.8%) filtered paired-sequences.
-Read in 17027 paired-sequences, output 16668 (97.9%) filtered paired-sequences.
-Read in 11272 paired-sequences, output 11023 (97.8%) filtered paired-sequences.
-Read in 8646 paired-sequences, output 8433 (97.5%) filtered paired-sequences.
-Read in 81800 paired-sequences, output 79860 (97.6%) filtered paired-sequences.
-Read in 129530 paired-sequences, output 126792 (97.9%) filtered paired-sequences.
-Read in 66494 paired-sequences, output 65084 (97.9%) filtered paired-sequences.
-Read in 58386 paired-sequences, output 57079 (97.8%) filtered paired-sequences.
-Read in 1 paired-sequences, output 1 (100%) filtered paired-sequences.
-Read in 3 paired-sequences, output 3 (100%) filtered paired-sequences.
-Read in 1 paired-sequences, output 1 (100%) filtered paired-sequences.
-Read in 48211 paired-sequences, output 47184 (97.9%) filtered paired-sequences.
-Read in 51813 paired-sequences, output 50708 (97.9%) filtered paired-sequences.
-Read in 57723 paired-sequences, output 56317 (97.6%) filtered paired-sequences.
-Read in 85607 paired-sequences, output 83706 (97.8%) filtered paired-sequences.
-Read in 979 paired-sequences, output 954 (97.4%) filtered paired-sequences.
-Read in 1661 paired-sequences, output 1622 (97.7%) filtered paired-sequences.
-Read in 1598 paired-sequences, output 1564 (97.9%) filtered paired-sequences.
-Read in 83830 paired-sequences, output 81777 (97.6%) filtered paired-sequences.
-Read in 50422 paired-sequences, output 49294 (97.8%) filtered paired-sequences.
-Read in 51525 paired-sequences, output 50453 (97.9%) filtered paired-sequences.
-Read in 49350 paired-sequences, output 48267 (97.8%) filtered paired-sequences.
+Read in 158 paired-sequences, output 157 (99.4%) filtered paired-sequences.
+Read in 106 paired-sequences, output 102 (96.2%) filtered paired-sequences.
+Read in 146 paired-sequences, output 142 (97.3%) filtered paired-sequences.
+Read in 372 paired-sequences, output 367 (98.7%) filtered paired-sequences.
+Read in 346 paired-sequences, output 343 (99.1%) filtered paired-sequences.
+Read in 362 paired-sequences, output 356 (98.3%) filtered paired-sequences.
+Read in 762 paired-sequences, output 754 (99%) filtered paired-sequences.
+Read in 752 paired-sequences, output 742 (98.7%) filtered paired-sequences.
+Read in 915 paired-sequences, output 903 (98.7%) filtered paired-sequences.
+Read in 1605 paired-sequences, output 1574 (98.1%) filtered paired-sequences.
+Read in 1560 paired-sequences, output 1540 (98.7%) filtered paired-sequences.
+Read in 1564 paired-sequences, output 1540 (98.5%) filtered paired-sequences.
+Read in 2430 paired-sequences, output 2404 (98.9%) filtered paired-sequences.
+Read in 3423 paired-sequences, output 3375 (98.6%) filtered paired-sequences.
+Read in 3845 paired-sequences, output 3786 (98.5%) filtered paired-sequences.
+Read in 5513 paired-sequences, output 5440 (98.7%) filtered paired-sequences.
+Read in 5535 paired-sequences, output 5465 (98.7%) filtered paired-sequences.
+Read in 5299 paired-sequences, output 5221 (98.5%) filtered paired-sequences.
+Read in 9571 paired-sequences, output 9467 (98.9%) filtered paired-sequences.
+Read in 11361 paired-sequences, output 11183 (98.4%) filtered paired-sequences.
+Read in 12070 paired-sequences, output 11897 (98.6%) filtered paired-sequences.
+Read in 24635 paired-sequences, output 24294 (98.6%) filtered paired-sequences.
+Read in 24583 paired-sequences, output 24196 (98.4%) filtered paired-sequences.
+Read in 14595 paired-sequences, output 14412 (98.7%) filtered paired-sequences.
+Read in 31952 paired-sequences, output 31511 (98.6%) filtered paired-sequences.
+Read in 35927 paired-sequences, output 35448 (98.7%) filtered paired-sequences.
+Read in 45517 paired-sequences, output 44935 (98.7%) filtered paired-sequences.
+Read in 60844 paired-sequences, output 60066 (98.7%) filtered paired-sequences.
+Read in 80289 paired-sequences, output 79190 (98.6%) filtered paired-sequences.
+Read in 92639 paired-sequences, output 91365 (98.6%) filtered paired-sequences.
+Read in 83367 paired-sequences, output 82384 (98.8%) filtered paired-sequences.
+Read in 72411 paired-sequences, output 71527 (98.8%) filtered paired-sequences.
+Read in 84325 paired-sequences, output 83157 (98.6%) filtered paired-sequences.
+Read in 88604 paired-sequences, output 87471 (98.7%) filtered paired-sequences.
+Read in 75056 paired-sequences, output 74100 (98.7%) filtered paired-sequences.
+Read in 68165 paired-sequences, output 67401 (98.9%) filtered paired-sequences.
+Read in 79712 paired-sequences, output 78671 (98.7%) filtered paired-sequences.
+Read in 98814 paired-sequences, output 97535 (98.7%) filtered paired-sequences.
+Read in 64496 paired-sequences, output 63577 (98.6%) filtered paired-sequences.
+Read in 80196 paired-sequences, output 79089 (98.6%) filtered paired-sequences.
+Read in 61067 paired-sequences, output 60302 (98.7%) filtered paired-sequences.
+Read in 102385 paired-sequences, output 101008 (98.7%) filtered paired-sequences.
+Read in 85511 paired-sequences, output 84452 (98.8%) filtered paired-sequences.
+Read in 71259 paired-sequences, output 70376 (98.8%) filtered paired-sequences.
+Read in 108285 paired-sequences, output 106791 (98.6%) filtered paired-sequences.
+Read in 84157 paired-sequences, output 83067 (98.7%) filtered paired-sequences.
+Read in 175609 paired-sequences, output 173434 (98.8%) filtered paired-sequences.
+Read in 76939 paired-sequences, output 75841 (98.6%) filtered paired-sequences.
+Read in 77810 paired-sequences, output 76828 (98.7%) filtered paired-sequences.
+Read in 85815 paired-sequences, output 84689 (98.7%) filtered paired-sequences.
+Read in 61860 paired-sequences, output 61070 (98.7%) filtered paired-sequences.
+Read in 79721 paired-sequences, output 78790 (98.8%) filtered paired-sequences.
+Read in 91167 paired-sequences, output 89967 (98.7%) filtered paired-sequences.
+Read in 84084 paired-sequences, output 82879 (98.6%) filtered paired-sequences.
+Read in 75602 paired-sequences, output 74556 (98.6%) filtered paired-sequences.
+Read in 89928 paired-sequences, output 88840 (98.8%) filtered paired-sequences.
+Read in 66275 paired-sequences, output 65402 (98.7%) filtered paired-sequences.
+Read in 77363 paired-sequences, output 76530 (98.9%) filtered paired-sequences.
+Read in 92806 paired-sequences, output 91596 (98.7%) filtered paired-sequences.
+Read in 114469 paired-sequences, output 112824 (98.6%) filtered paired-sequences.
+Read in 65066 paired-sequences, output 64196 (98.7%) filtered paired-sequences.
+Read in 77750 paired-sequences, output 76752 (98.7%) filtered paired-sequences.
+Read in 96228 paired-sequences, output 95003 (98.7%) filtered paired-sequences.
+Read in 94151 paired-sequences, output 92859 (98.6%) filtered paired-sequences.
+Read in 74691 paired-sequences, output 73592 (98.5%) filtered paired-sequences.
+Read in 70259 paired-sequences, output 69330 (98.7%) filtered paired-sequences.
+Read in 135729 paired-sequences, output 133883 (98.6%) filtered paired-sequences.
+Read in 78088 paired-sequences, output 77045 (98.7%) filtered paired-sequences.
+Read in 41425 paired-sequences, output 40848 (98.6%) filtered paired-sequences.
+Read in 87172 paired-sequences, output 86049 (98.7%) filtered paired-sequences.
+Read in 74134 paired-sequences, output 73133 (98.6%) filtered paired-sequences.
+Read in 78136 paired-sequences, output 77149 (98.7%) filtered paired-sequences.
+Read in 93716 paired-sequences, output 92490 (98.7%) filtered paired-sequences.
+Read in 75077 paired-sequences, output 74087 (98.7%) filtered paired-sequences.
+Read in 85438 paired-sequences, output 84288 (98.7%) filtered paired-sequences.
+Read in 89089 paired-sequences, output 87895 (98.7%) filtered paired-sequences.
+Read in 77926 paired-sequences, output 76944 (98.7%) filtered paired-sequences.
+Read in 94769 paired-sequences, output 93405 (98.6%) filtered paired-sequences.
+Read in 56352 paired-sequences, output 55632 (98.7%) filtered paired-sequences.
+Read in 73236 paired-sequences, output 72089 (98.4%) filtered paired-sequences.
+Read in 62715 paired-sequences, output 61919 (98.7%) filtered paired-sequences.
+Read in 70026 paired-sequences, output 69153 (98.8%) filtered paired-sequences.
+Read in 58165 paired-sequences, output 57400 (98.7%) filtered paired-sequences.
+Read in 77716 paired-sequences, output 76751 (98.8%) filtered paired-sequences.
+Read in 78249 paired-sequences, output 77249 (98.7%) filtered paired-sequences.
+Read in 82087 paired-sequences, output 80952 (98.6%) filtered paired-sequences.
+Read in 75069 paired-sequences, output 74112 (98.7%) filtered paired-sequences.
+Read in 65321 paired-sequences, output 64594 (98.9%) filtered paired-sequences.
+Read in 70420 paired-sequences, output 69477 (98.7%) filtered paired-sequences.
+Read in 52788 paired-sequences, output 52061 (98.6%) filtered paired-sequences.
+Read in 62092 paired-sequences, output 61295 (98.7%) filtered paired-sequences.
+Read in 68750 paired-sequences, output 67657 (98.4%) filtered paired-sequences.
+Read in 76088 paired-sequences, output 74989 (98.6%) filtered paired-sequences.
+Read in 83589 paired-sequences, output 82447 (98.6%) filtered paired-sequences.
+Read in 70647 paired-sequences, output 69728 (98.7%) filtered paired-sequences.
+Read in 82217 paired-sequences, output 81063 (98.6%) filtered paired-sequences.
+Read in 59026 paired-sequences, output 58243 (98.7%) filtered paired-sequences.
+Read in 68594 paired-sequences, output 67482 (98.4%) filtered paired-sequences.
+Read in 49256 paired-sequences, output 48589 (98.6%) filtered paired-sequences.
+Read in 76281 paired-sequences, output 75143 (98.5%) filtered paired-sequences.
+Read in 79933 paired-sequences, output 78841 (98.6%) filtered paired-sequences.
+Read in 62345 paired-sequences, output 61344 (98.4%) filtered paired-sequences.
+Read in 64392 paired-sequences, output 63488 (98.6%) filtered paired-sequences.
+Read in 75720 paired-sequences, output 74749 (98.7%) filtered paired-sequences.
+Read in 62994 paired-sequences, output 62215 (98.8%) filtered paired-sequences.
+Read in 76528 paired-sequences, output 75500 (98.7%) filtered paired-sequences.
+Read in 65241 paired-sequences, output 64402 (98.7%) filtered paired-sequences.
+Read in 69590 paired-sequences, output 68586 (98.6%) filtered paired-sequences.
 > 
 > proc.time()
    user  system elapsed 
-322.322   2.471 330.229 
+820.252   3.992 875.352 
